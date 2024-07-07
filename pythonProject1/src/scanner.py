@@ -52,10 +52,10 @@ token_re = re.compile(token_regex)
 def tokenize(code):
     tokens = []
     for match in token_re.finditer(code):
-        kind = match.lastgroup
-        value = match.group(kind)
-        if kind != 'WHITESPACE' and kind != 'COMMENT':  # Ignore whitespace and comments
-            tokens.append((kind, value))
+        token_type = match.lastgroup
+        token_value = match.group(token_type)
+        if token_type != 'WHITESPACE' and token_type != 'COMMENT':  # Ignore whitespace and comments
+            tokens.append((token_type, token_value))
     return tokens
 
 # print statements to make code look organized
