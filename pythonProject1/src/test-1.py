@@ -6,25 +6,24 @@
  * Project:     Deliverable P1 Scanner
 """
 
-
 import re
 
 # function
-code = """function a()
-	x = 1
-		if ~= x 1 then
-			print(0)
-		else
-			print(1)
-		end
+code = """function b()
+   y = 2 + 3
+   if y == 5 then
+       print(10)
+   else
+       print(1)
+   end
 end
 """
 
 # token patterns for the lexical analyzer
 token_patterns = [
     ('FUNCTION', r'\bfunction\b'),
-    ('ID', r'\b[a-zA-Z]\b'),
-    ('LITERAL_INTEGER', r'\b\d+\b'),
+    ('ID', r'[a-zA-Z]\w*'),
+    ('LITERAL_INTEGER', r'\d+'),
     ('ASSIGNMENT_OPERATOR', r'='),
     ('LE_OPERATOR', r'<='),
     ('LT_OPERATOR', r'<'),
@@ -41,8 +40,6 @@ token_patterns = [
     ('THEN', r'\bthen\b'),
     ('END', r'\bend\b'),
     ('PRINT', r'\bprint\b'),
-    ('WHILE', r'\bwhile\b'),
-    ('DO', r'\bdo\b'),
     ('OPEN_PARENTHESIS', r'\('),
     ('CLOSE_PARENTHESIS', r'\)'),
     ('WHITESPACE', r'\s+'),
@@ -75,4 +72,31 @@ print(f'{"-" * 15} {"-" * 20}')
 tokens = tokenize(code)
 for token in tokens:
     print(f'{token[1]:<15} {token[0]}')
+
+grammar_rules = {
+    'program': ['function'],
+    'function': ['FUNCTION ID OPEN_PARENTHESIS CLOSE_PARENTHESIS block END'],
+    'block': ['statement', 'statement block'],  # Fix the rule here
+}
+
+# Define a recursive descent parser
+def parse(tokens, rule):
+    if not tokens:
+        return False
+    for option in grammar_rules[rule]:
+        remaining_tokens = tokens.copy()
+        for token in option.split():
+            if not remaining_tokens or remaining_tokens[0][0] != token:
+                break
+            remaining_tokens.pop(0)
+        else:
+            return True
+    return False
+
+# Test the parser with the given tokens
+tokens = tokenize(code)
+if parse(tokens, 'program'):
+    print("The code follows the grammar rules.")
+else:
+    print("The code does not follow the grammar rules.")
 

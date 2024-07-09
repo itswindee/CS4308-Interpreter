@@ -6,15 +6,17 @@
  * Project:     Deliverable P1 Scanner
 """
 
+
 import re
 
 # function
 code = """function a()
 	x = 1
-	while <x 4 do
-		x += x 1
-	end
-	print(x)
+		if ~= x 1 then
+			print(0)
+		else
+			print(1)
+		end
 end
 """
 
@@ -73,4 +75,32 @@ print(f'{"-" * 15} {"-" * 20}')
 tokens = tokenize(code)
 for token in tokens:
     print(f'{token[1]:<15} {token[0]}')
+
+grammar_rules = {
+    'program': ['function'],
+    'function': ['FUNCTION ID OPEN_PARENTHESIS CLOSE_PARENTHESIS block END'],
+    'block': ['statement', 'block statement'],
+    # Add more rules for statements, expressions, etc.
+}
+
+# Define a recursive descent parser
+def parse(tokens, rule):
+    if not tokens:
+        return False
+    for option in grammar_rules[rule]:
+        remaining_tokens = tokens.copy()
+        for token in option.split():
+            if not remaining_tokens or remaining_tokens[0][0] != token:
+                break
+            remaining_tokens.pop(0)
+        else:
+            return True
+    return False
+
+# Test the parser with the given tokens
+tokens = tokenize(code)
+if parse(tokens, 'program'):
+    print("The code follows the grammar rules.")
+else:
+    print("The code does not follow the grammar rules.")
 
