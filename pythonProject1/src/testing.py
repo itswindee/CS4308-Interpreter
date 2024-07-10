@@ -1,124 +1,98 @@
-from tokenize import tokenize
-
+import re
 
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
-        self.current_token = self.tokens[0]
+        self.current_token = None
+        self.token_index = 0
+        self.parse()
 
-    def error(self):
-        raise Exception('Invalid syntax')
-
-    def eat(self, token_type):
-        if self.current_token[0] == token_type:
-            self.tokens.pop(0)
-            if self.tokens:
-                self.current_token = self.tokens[0]
-            else:
-                self.current_token = None
+    def advance(self):
+        self.token_index += 1
+        if self.token_index < len(self.tokens):
+            self.current_token = self.tokens[self.token_index]
         else:
-            self.error()
+            self.current_token = None
 
-    def program(self):
+    def expect(self, token_type):
+        if self.current_token and self.current_token[0] == token_type:
+            self.advance()
+        else:
+            raise SyntaxError(f"Expected {token_type}, but found {self.current_token[0]}")
+
+    def parse(self):
         while self.current_token:
-            self.statement()
+            if self.current_token[0] == 'FUNCTION':
+                self.parse_function_declaration()
+            elif self.current_token[0] == 'ID':
+                self.parse_assignment()
+            elif self.current_token[0] == 'PRINT':
+                self.parse_print_statement()
+            else:
+                raise SyntaxError(f"Unexpected token: {self.current_token[0]}")
 
-    def statement(self):
-        if self.current_token[0] == 'FUNCTION':
-            self.function_declaration()
-            print("Function declaration recognized")
-        elif self.current_token[0] == 'IF':
-            self.if_statement()
-            print("If statement recognized")
-        elif self.current_token[0] == 'PRINT':
-            self.print_statement()
-            print("Print statement recognized")
-        elif self.current_token[0] == 'ID':
-            self.assignment_statement()
-            print("Assignment statement recognized")
-        else:
-            self.error()
+    def parse_function_declaration(self):
+        self.expect('FUNCTION')
+        self.expect('ID')
+        self.expect('OPEN_PARENTHESIS')
+        # Parse function parameters (if any)
+        while self.current_token[0] != 'CLOSE_PARENTHESIS':
+            self.expect('ID')
+            # Handle function parameters
+        self.expect('CLOSE_PARENTHESIS')
+        # Parse function body (statements inside the function)
+        while self.current_token[0] != 'END':
+            self.parse_statement()
+        self.expect('END')
 
-    def function_declaration(self):
-        self.eat('FUNCTION')
-        self.eat('ID')
-        self.eat('OPEN_PARENTHESIS')
-        self.eat('CLOSE_PARENTHESIS')
-        self.block()
-        self.eat('END')
+    def parse_assignment(self):
+        self.expect('ID')
+        self.expect('ASSIGNMENT_OPERATOR')
+        # Parse expression on the right-hand side of the assignment
+        # Handle variable assignment
 
-    def if_statement(self):
-        self.eat('IF')
-        self.expression()
-        self.eat('THEN')
-        self.block()
-        if self.current_token and self.current_token[0] == 'ELSE':
-            self.eat('ELSE')
-            self.block()
+    def parse_print_statement(self):
+        self.expect('PRINT')
+        self.expect('OPEN_PARENTHESIS')
+        # Parse expression to be printed
+        # Handle print statement
+        self.expect('CLOSE_PARENTHESIS')
 
-    def print_statement(self):
-        self.eat('PRINT')
-        self.eat('OPEN_PARENTHESIS')
-        self.expression()
-        self.eat('CLOSE_PARENTHESIS')
+    def parse_statement(self):
+        # Implement parsing for other statements (e.g., conditionals, loops, etc.)
+        pass
 
-    def assignment_statement(self):
-        self.eat('ID')
-        self.eat('ASSIGNMENT_OPERATOR')
-        self.expression()
-
-    def block(self):
-        while self.current_token and self.current_token[0] not in ['END', 'ELSE']:
-            self.statement()
-
-    def expression(self):
-        self.term()
-        while self.current_token and self.current_token[0] in ['ADD_OPERATOR', 'SUB_OPERATOR']:
-            self.eat(self.current_token[0])
-            self.term()
-
-    def term(self):
-        self.factor()
-        while self.current_token and self.current_token[0] in ['MUL_OPERATOR', 'DIV_OPERATOR']:
-            self.eat(self.current_token[0])
-            self.factor()
-
-    def factor(self):
-        if self.current_token[0] == 'ID':
-            self.eat('ID')
-        elif self.current_token[0] == 'LITERAL_INTEGER':
-            self.eat('LITERAL_INTEGER')
-        else:
-            self.eat('OPEN_PARENTHESIS')
-            self.expression()
-            self.eat('CLOSE_PARENTHESIS')
-
-# Test the parser
-code1 = """function b()
-   y = 2 + 3
-   if y == 5 then
-       print(10)
-   else
-       print(1)
-   end
+# Example input code
+code = """
+function a()
+    x = 1
+    print(x)
 end
 """
 
-code2 = """print(10)
-"""
+# Tokenize the input code
+def tokenize(code):
+    token_patterns = [
+        ('FUNCTION', r'\bfunction\b'),
+        ('ID', r'[a-zA-Z]\w*'),
+        ('LITERAL_INTEGER', r'\d+'),
+        ('ASSIGNMENT_OPERATOR', r'='),
+        ('PRINT', r'\bprint\b'),
+        ('OPEN_PARENTHESIS', r'\('),
+        ('CLOSE_PARENTHESIS', r'\)'),
+        ('WHITESPACE', r'\s+'),
+        ('COMMENT', r'//.*'),
+    ]
+    token_regex = '|'.join(f'(?P<{name}>{pattern})' for name, pattern in token_patterns)
+    token_re = re.compile(token_regex)
+    tokens = []
+    for match in token_re.finditer(code):
+        token_type = match.lastgroup
+        token_value = match.group(token_type)
+        if token_type != 'WHITESPACE' and token_type != 'COMMENT':
+            tokens.append((token_type, token_value))
+    return tokens
 
-code3 = """x = 5
-if x == 5 then
-    print(10)
-else
-    print(1)
-end
-"""
-
-codes = [code1, code2, code3]
-
-for code in codes:
-    tokens = tokenize(code)
-    parser = Parser(tokens)
-    parser.program()
-    print()
+tokens = tokenize(code)
+parser = Parser(tokens)
+# You can add code here to display or process the recognized constructs (e.g., print AST nodes)
