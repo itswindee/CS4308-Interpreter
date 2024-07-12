@@ -18,8 +18,8 @@ end
 # token patterns for the lexical analyzer
 token_patterns = [
     ('FUNCTION', r'\bfunction\b'),
-    ('ID', r'[a-zA-Z]\w*'),
-    ('LITERAL_INTEGER', r'\d+'),
+    ('ID', r'\b[a-zA-Z]\b'),
+    ('LITERAL_INTEGER', r'\b\d+\b'),
     ('ASSIGNMENT_OPERATOR', r'='),
     ('LE_OPERATOR', r'<='),
     ('LT_OPERATOR', r'<'),
@@ -36,6 +36,8 @@ token_patterns = [
     ('THEN', r'\bthen\b'),
     ('END', r'\bend\b'),
     ('PRINT', r'\bprint\b'),
+    ('WHILE', r'\bwhile\b'),
+    ('DO', r'\bdo\b'),
     ('OPEN_PARENTHESIS', r'\('),
     ('CLOSE_PARENTHESIS', r'\)'),
     ('WHITESPACE', r'\s+'),
@@ -197,6 +199,3 @@ tokens = tokenize(code)
 # Initialize and run the parser
 parser = Parser(tokens)
 parser.parse()
-
-
-

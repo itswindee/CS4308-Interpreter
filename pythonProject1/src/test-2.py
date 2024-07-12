@@ -12,7 +12,7 @@ import re
 code = """function a()
 	x = 1
 	while <x 4 do
-		x += x 1
+		x = 1
 	end
 	print(x)
 end
@@ -202,5 +202,3 @@ tokens = tokenize(code)
 # Initialize and run the parser
 parser = Parser(tokens)
 parser.parse()
-
-
