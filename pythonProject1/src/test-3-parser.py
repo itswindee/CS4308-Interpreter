@@ -3,7 +3,7 @@
  * Term:        Summer 2024
  * Name:        Emily Zhu
  * Instructor:  Sharon Perry
- * Project:     Deliverable P1 Scanner
+ * Project:     Deliverable P2 Parser
 """
 
 
@@ -76,13 +76,17 @@ tokens = tokenize(code)
 for token in tokens:
     print(f'{token[1]:<15} {token[0]}')
 
-
+# parser
 class Parser:
+    # sets current token index to 0 and then
     def __init__(self, tokens):
         self.tokens = tokens
         self.current_token_index = 0
         self.current_token = self.tokens[self.current_token_index] if self.tokens else None
 
+    # this will eat a token of a specified type
+    # if the current token matches the expected token, it will move onto the next token
+    # if not, it will throw an error message
     def eat(self, token_type):
         if self.current_token[0] == token_type:
             self.current_token_index += 1
@@ -95,6 +99,7 @@ class Parser:
         print(f"{message}")
         exit(1)
 
+    # represents the parsing process & any exceptions
     def parse(self):
         print()
         print("Syntax analysis...")
@@ -104,6 +109,7 @@ class Parser:
         except Exception as e:
             self.error(str(e))
 
+    # this will parse function id() <block> end
     def program(self):
         print("<program> -> function id() <block> end")
         self.eat('FUNCTION')
@@ -113,6 +119,7 @@ class Parser:
         self.block()
         self.eat('END')
 
+    # this will parse strings/statements
     def block(self):
         if self.current_token and self.current_token[0] in ['ID', 'IF', 'WHILE', 'PRINT']:
             self.statement()
@@ -120,6 +127,7 @@ class Parser:
         else:
             return
 
+    # this will determine the string's type and choose the appropriate method
     def statement(self):
         if self.current_token[0] == 'ID':
             self.assignment_statement()
@@ -132,12 +140,14 @@ class Parser:
         else:
             self.error(f"Parsing error: Unexpected token {self.current_token[0]}")
 
+    # this will parse an assignment statement: id = <arithmetic_expression>
     def assignment_statement(self):
         print("<assignment_statement> -> id <assignment_operator> <arithmetic_expression>")
         self.eat('ID')
         self.eat('ASSIGNMENT_OPERATOR')
         self.arithmetic_expression()
 
+    # this will parse an if statement: if <boolean_expression> then <block> else <block> end
     def if_statement(self):
         print("<if_statement> -> if <boolean_expression> then <block> else <block> end")
         self.eat('IF')
@@ -148,6 +158,7 @@ class Parser:
         self.block()
         self.eat('END')
 
+    # this will parse a while statement: while <boolean_expression> do <block> end
     def while_statement(self):
         print("<while_statement> -> while <boolean_expression> do <block> end")
         self.eat('WHILE')
@@ -156,6 +167,7 @@ class Parser:
         self.block()
         self.eat('END')
 
+    # this will parse a print statement: print(<arithmetic_expression>)
     def print_statement(self):
         print("<print_statement> -> print(<arithmetic_expression>)")
         self.eat('PRINT')
@@ -163,12 +175,14 @@ class Parser:
         self.arithmetic_expression()
         self.eat('CLOSE_PARENTHESIS')
 
+    # this will a boolean expression: <relative_op> <arithmetic_expression> <arithmetic_expression>
     def boolean_expression(self):
         print("<boolean_expression> -> <relative_op> <arithmetic_expression> <arithmetic_expression>")
         self.relative_op()
         self.arithmetic_expression()
         self.arithmetic_expression()
 
+    # this will parse operators: <, <=, >, >=, ==, !=
     def relative_op(self):
         if self.current_token[0] in ['LE_OPERATOR', 'LT_OPERATOR', 'GE_OPERATOR', 'GT_OPERATOR', 'EQ_OPERATOR',
                                      'NE_OPERATOR']:
@@ -177,6 +191,7 @@ class Parser:
         else:
             self.error(f"Parsing error: Unexpected token {self.current_token[0]} in relative_op")
 
+    # this will parse an arithmetic expression: id | literal_integer | <arithmetic_op> <arithmetic_expression> <arithmetic_expression>
     def arithmetic_expression(self):
         print(
             "<arithmetic_expression> -> id | literal_integer | <arithmetic_op> <arithmetic_expression> <arithmetic_expression>")
@@ -191,6 +206,7 @@ class Parser:
         else:
             self.error(f"Parsing error: Unexpected token {self.current_token[0]} in arithmetic_expression")
 
+    # this will parse an arithmetic operator: one of +, -, *, /
     def arithmetic_op(self):
         if self.current_token[0] in ['ADD_OPERATOR', 'SUB_OPERATOR', 'MUL_OPERATOR', 'DIV_OPERATOR']:
             print(f"<arithmetic_op> -> {self.current_token[0]}")
@@ -198,11 +214,6 @@ class Parser:
         else:
             self.error(f"Parsing error: Unexpected token {self.current_token[0]} in arithmetic_op")
 
-
-# Tokenize the input code
 tokens = tokenize(code)
-# Initialize and run the parser
 parser = Parser(tokens)
 parser.parse()
-
-
