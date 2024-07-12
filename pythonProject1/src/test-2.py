@@ -90,7 +90,7 @@ class Parser:
             self.error(f"Parsing error: Expected {token_type}, got {self.current_token[0]}")
 
     def error(self, message):
-        print(f"Error: {message}")
+        print(f"{message}")
         exit(1)
 
     def parse(self):
