@@ -74,31 +74,133 @@ tokens = tokenize(code)
 for token in tokens:
     print(f'{token[1]:<15} {token[0]}')
 
-grammar_rules = {
-    'program': ['function'],
-    'function': ['FUNCTION ID OPEN_PARENTHESIS CLOSE_PARENTHESIS block END'],
-    'block': ['statement', 'block statement'],
-    # Add more rules for statements, expressions, etc.
-}
 
-# Define a recursive descent parser
-def parse(tokens, rule):
-    if not tokens:
-        return False
-    for option in grammar_rules[rule]:
-        remaining_tokens = tokens.copy()
-        for token in option.split():
-            if not remaining_tokens or remaining_tokens[0][0] != token:
-                break
-            remaining_tokens.pop(0)
+class Parser:
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.current_token_index = 0
+        self.current_token = self.tokens[self.current_token_index] if self.tokens else None
+
+    def eat(self, token_type):
+        if self.current_token[0] == token_type:
+            self.current_token_index += 1
+            self.current_token = self.tokens[self.current_token_index] if self.current_token_index < len(
+                self.tokens) else None
         else:
-            return True
-    return False
+            self.error(f"Parsing error: Expected {token_type}, got {self.current_token[0]}")
 
-# Test the parser with the given tokens
+    def error(self, message):
+        print(f"Error: {message}")
+        exit(1)
+
+    def parse(self):
+        print()
+        print("Syntax analysis...")
+        try:
+            self.program()
+            print("Syntax Analysis Complete...")
+        except Exception as e:
+            self.error(str(e))
+
+    def program(self):
+        print("<program> -> function id() <block> end")
+        self.eat('FUNCTION')
+        self.eat('ID')
+        self.eat('OPEN_PARENTHESIS')
+        self.eat('CLOSE_PARENTHESIS')
+        self.block()
+        self.eat('END')
+
+    def block(self):
+        if self.current_token and self.current_token[0] in ['ID', 'IF', 'WHILE', 'PRINT']:
+            self.statement()
+            self.block()
+        else:
+            return
+
+    def statement(self):
+        if self.current_token[0] == 'ID':
+            self.assignment_statement()
+        elif self.current_token[0] == 'IF':
+            self.if_statement()
+        elif self.current_token[0] == 'WHILE':
+            self.while_statement()
+        elif self.current_token[0] == 'PRINT':
+            self.print_statement()
+        else:
+            self.error(f"Parsing error: Unexpected token {self.current_token[0]}")
+
+    def assignment_statement(self):
+        print("<assignment_statement> -> id <assignment_operator> <arithmetic_expression>")
+        self.eat('ID')
+        self.eat('ASSIGNMENT_OPERATOR')
+        self.arithmetic_expression()
+
+    def if_statement(self):
+        print("<if_statement> -> if <boolean_expression> then <block> else <block> end")
+        self.eat('IF')
+        self.boolean_expression()
+        self.eat('THEN')
+        self.block()
+        self.eat('ELSE')
+        self.block()
+        self.eat('END')
+
+    def while_statement(self):
+        print("<while_statement> -> while <boolean_expression> do <block> end")
+        self.eat('WHILE')
+        self.boolean_expression()
+        self.eat('DO')
+        self.block()
+        self.eat('END')
+
+    def print_statement(self):
+        print("<print_statement> -> print(<arithmetic_expression>)")
+        self.eat('PRINT')
+        self.eat('OPEN_PARENTHESIS')
+        self.arithmetic_expression()
+        self.eat('CLOSE_PARENTHESIS')
+
+    def boolean_expression(self):
+        print("<boolean_expression> -> <relative_op> <arithmetic_expression> <arithmetic_expression>")
+        self.relative_op()
+        self.arithmetic_expression()
+        self.arithmetic_expression()
+
+    def relative_op(self):
+        if self.current_token[0] in ['LE_OPERATOR', 'LT_OPERATOR', 'GE_OPERATOR', 'GT_OPERATOR', 'EQ_OPERATOR',
+                                     'NE_OPERATOR']:
+            print(f"<relative_op> -> {self.current_token[0]}")
+            self.eat(self.current_token[0])
+        else:
+            self.error(f"Parsing error: Unexpected token {self.current_token[0]} in relative_op")
+
+    def arithmetic_expression(self):
+        print(
+            "<arithmetic_expression> -> id | literal_integer | <arithmetic_op> <arithmetic_expression> <arithmetic_expression>")
+        if self.current_token[0] == 'ID':
+            self.eat('ID')
+        elif self.current_token[0] == 'LITERAL_INTEGER':
+            self.eat('LITERAL_INTEGER')
+        elif self.current_token[0] in ['ADD_OPERATOR', 'SUB_OPERATOR', 'MUL_OPERATOR', 'DIV_OPERATOR']:
+            self.arithmetic_op()
+            self.arithmetic_expression()
+            self.arithmetic_expression()
+        else:
+            self.error(f"Parsing error: Unexpected token {self.current_token[0]} in arithmetic_expression")
+
+    def arithmetic_op(self):
+        if self.current_token[0] in ['ADD_OPERATOR', 'SUB_OPERATOR', 'MUL_OPERATOR', 'DIV_OPERATOR']:
+            print(f"<arithmetic_op> -> {self.current_token[0]}")
+            self.eat(self.current_token[0])
+        else:
+            self.error(f"Parsing error: Unexpected token {self.current_token[0]} in arithmetic_op")
+
+
+# Tokenize the input code
 tokens = tokenize(code)
-if parse(tokens, 'program'):
-    print("The code follows the grammar rules.")
-else:
-    print("The code does not follow the grammar rules.")
+# Initialize and run the parser
+parser = Parser(tokens)
+parser.parse()
+
 
