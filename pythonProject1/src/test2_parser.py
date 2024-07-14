@@ -59,6 +59,8 @@ def tokenize(code):
             tokens.append((token_type, token_value))
     return tokens
 
+print("Lexical Analysis...")
+
 # print statements to make code look organized
 # this is the test input
 print(f'{"-" * 40}')
@@ -73,6 +75,8 @@ print(f'{"-" * 15} {"-" * 20}')
 tokens = tokenize(code)
 for token in tokens:
     print(f'{token[1]:<15} {token[0]}')
+
+print("Lexical Analysis Complete...")
 
 # parser
 class Parser:
@@ -100,7 +104,7 @@ class Parser:
     # represents the parsing process & any exceptions
     def parse(self):
         print()
-        print("Syntax analysis...")
+        print("Syntax Analysis...")
         try:
             self.program()
             print("Syntax Analysis Complete...")
